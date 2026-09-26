@@ -1,0 +1,16 @@
+customer_id,recency_days,frequency_orders,monetary_value,preferred_category,satisfaction_score
+CUST-001,12,24,3400.50,Electronics,4.8
+CUST-002,145,2,150.00,Clothing,2.1
+CUST-003,30,12,1850.00,Electronics,4.2
+CUST-004,210,1,85.20,Furniture,1.5
+CUST-005,5,35,5200.00,Electronics,4.9
+CUST-006,88,4,420.00,Clothing,3.0
+CUST-007,15,18,2900.00,Furniture,4.5
+CUST-008,180,2,110.00,Clothing,2.0
+CUST-009,42,8,1200.00,Electronics,3.8
+CUST-010,8,29,4800.00,Electronics,5.0
+CUST-011,110,3,310.00,Furniture,2.8
+CUST-012,22,15,2100.00,Electronics,4.1
+CUST-013,195,1,75.00,Clothing,1.8
+CUST-014,3,40,6500.00,Electronics,4.9
+CUST-015,65,6,750.00,Furniture,3.4
