@@ -34,6 +34,17 @@ export interface TraceLog {
   step: string;
   description: string;
   timestamp: number | string;
+  llm_usage?: {
+    provider?: string;
+    model?: string;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    estimated_cost_usd?: number;
+    latency_ms?: number;
+    retries?: number;
+  };
+  sources?: string[];
 }
 
 export interface ClaimValidation {
@@ -79,6 +90,7 @@ export interface AnalysisReport {
   recommendations: string[];
   limitations: string[];
   analysis_trace: TraceLog[];
+  sources?: string[];
   created_at: string;
 }
 
@@ -90,6 +102,9 @@ export interface AnalysisSession {
   approvalPrompt?: string;
   isApproved: boolean;
   plan?: AnalysisPlan;
+  observations?: any[];
+  charts?: any[];
+  sources?: string[];
   validationResult?: ValidationResult;
   finalReport?: AnalysisReport;
   traceLogs: TraceLog[];

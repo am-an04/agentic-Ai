@@ -12,7 +12,11 @@ import {
   Search,
   Activity,
   Sparkles,
-  Trash2
+  Trash2,
+  Cpu,
+  Zap,
+  BookOpen,
+  ListChecks
 } from 'lucide-react';
 import { Dataset, AnalysisSession } from '../types';
 import { api } from '../services/api';
@@ -75,35 +79,6 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
     }
   };
 
-  const getDefaultQuestions = (): string[] => {
-    if (!activeDataset) {
-      return [
-        "Analyze statistical correlations, distributions, and outliers across the uploaded dataset.",
-        "Perform regression or classification to model primary relationships and key metrics."
-      ];
-    }
-    const cols = activeDataset.columns || [];
-    const numCols = activeDataset.numericalColumns || [];
-    if (numCols.length >= 2) {
-      return [
-        `Analyze correlations and distributions between ${numCols[0]} and ${numCols[1]} in ${activeDataset.originalName}.`,
-        `Identify significant drivers and anomalies affecting ${numCols[0]} in this dataset.`
-      ];
-    }
-    if (cols.length > 0) {
-      return [
-        `Analyze distributions and key statistical patterns across all features in ${activeDataset.originalName}.`,
-        `Detect anomalous records and build a predictive summary model for ${activeDataset.originalName}.`
-      ];
-    }
-    return [
-      `Analyze statistical correlations, distributions, and outliers in ${activeDataset.originalName}.`,
-      `Build a predictive model to identify key factors and patterns in ${activeDataset.originalName}.`
-    ];
-  };
-
-  const defaultQuestions = getDefaultQuestions();
-
   const handleDeleteCurrentSession = async () => {
     if (!session) return;
     if (window.confirm("Are you sure you want to delete this analyzed work?")) {
@@ -148,6 +123,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
             }}
             className="bg-neutral-900 border border-neutral-700 text-neutral-200 text-xs rounded-lg px-3 py-2 font-mono focus:outline-none focus:border-white"
           >
+            <option value="">Select a dataset...</option>
             {datasets.map(d => (
               <option key={d._id} value={d._id}>{d.originalName}</option>
             ))}
@@ -193,28 +169,6 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 </>
               )}
             </button>
-          </div>
-
-          {/* Quick Query Presets */}
-          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
-            <span className="text-neutral-400 font-mono flex items-center space-x-1.5 flex-shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-              <span>Suggested Queries:</span>
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {defaultQuestions.map((defQ, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setQuestion(defQ)}
-                  className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-white text-neutral-300 hover:text-white text-xs font-sans text-left transition-colors flex items-center space-x-1.5"
-                  title="Click to populate with this default value"
-                >
-                  <span className="font-mono text-neutral-500 font-bold">#{idx + 1}</span>
-                  <span className="line-clamp-1">{defQ}</span>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
@@ -269,8 +223,55 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
       {/* Workspace Split: Execution Log vs Charts/Findings */}
       {session && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
-          {/* Analysis Execution Steps */}
+          {/* Left Column: Autonomous Plan & Execution Log */}
           <div className="lg:col-span-5 space-y-4">
+            {/* Autonomous Plan Card if present */}
+            {session.plan && (
+              <div className="glass-panel p-5 rounded-xl space-y-3 border border-neutral-800">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+                  <div className="flex items-center space-x-2 text-white font-bold text-sm">
+                    <ListChecks className="w-4 h-4 text-white" />
+                    <span>Autonomous Plan</span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-neutral-300">
+                    {session.plan.plan_steps?.length || 0} Steps
+                  </span>
+                </div>
+
+                {session.plan.reasoning && (
+                  <div className="p-3 rounded-lg bg-black border border-neutral-800 space-y-1">
+                    <div className="text-[10px] font-mono uppercase text-neutral-400 font-semibold flex items-center space-x-1">
+                      <Sparkles className="w-3 h-3 text-white" />
+                      <span>Planner Reasoning</span>
+                    </div>
+                    <p className="text-xs text-neutral-300 font-sans leading-relaxed italic">
+                      "{session.plan.reasoning}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {session.plan.plan_steps?.map((step: any, idx: number) => (
+                    <div key={idx} className="p-2.5 rounded bg-black border border-neutral-850 flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center space-x-2 truncate">
+                        <span className="text-neutral-500 font-bold">#{step.step_number || idx + 1}</span>
+                        <span className="text-neutral-200 truncate">{step.action}</span>
+                      </div>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-semibold flex-shrink-0 ${
+                        step.status === 'completed' ? 'bg-neutral-900 text-neutral-300 border border-neutral-800' :
+                        step.status === 'failed' ? 'bg-neutral-900 text-red-400 border border-neutral-800' :
+                        step.status === 'running' ? 'bg-white text-black font-bold' :
+                        'bg-neutral-950 text-neutral-500 border border-neutral-850'
+                      }`}>
+                        {step.status || 'pending'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Execution Log */}
             <div className="glass-panel p-5 rounded-xl space-y-4 border border-neutral-800">
               <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
                 <div className="flex items-center space-x-2">
@@ -294,12 +295,37 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
               {/* Log steps */}
               <div className="space-y-3 font-mono text-xs max-h-[550px] overflow-y-auto pr-1">
                 {session.traceLogs?.map((log, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-black border border-neutral-800 space-y-1">
+                  <div key={idx} className="p-3 rounded-lg bg-black border border-neutral-800 space-y-1.5">
                     <div className="flex items-center justify-between text-white font-semibold">
                       <span>{log.step}</span>
                       <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                     </div>
                     <p className="text-neutral-400 font-sans text-xs">{log.description}</p>
+                    
+                    {/* LLM Usage Telemetry Badge */}
+                    {log.llm_usage && (
+                      <div className="pt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-neutral-400">
+                        <span className="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-300 font-mono flex items-center space-x-1">
+                          <Cpu className="w-2.5 h-2.5 text-white" />
+                          <span>{log.llm_usage.model || 'llm'}</span>
+                        </span>
+                        {log.llm_usage.total_tokens !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 font-mono">
+                            {log.llm_usage.total_tokens} tokens
+                          </span>
+                        )}
+                        {log.llm_usage.latency_ms !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 font-mono">
+                            {log.llm_usage.latency_ms.toFixed(0)}ms
+                          </span>
+                        )}
+                        {log.llm_usage.estimated_cost_usd !== undefined && log.llm_usage.estimated_cost_usd > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 font-mono text-neutral-300">
+                            ${log.llm_usage.estimated_cost_usd.toFixed(6)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

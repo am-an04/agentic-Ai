@@ -25,6 +25,8 @@ class PlanStep(BaseModel):
     description: str
     tool_needed: str
     status: str = "pending"  # pending, running, completed, failed
+    params: Optional[Dict[str, Any]] = None
+    requires_approval: Optional[bool] = False
 
 class AnalysisPlan(BaseModel):
     goal: str
@@ -67,6 +69,7 @@ class AnalysisReport(BaseModel):
     limitations: List[str]
     analysis_trace: List[Dict[str, Any]]
     created_at: str
+    sources: Optional[List[str]] = None
 
 class AnalyzeRequest(BaseModel):
     dataset_path: str

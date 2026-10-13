@@ -12,6 +12,8 @@ export interface IAnalysisSession extends Document {
   validationResult?: any;
   finalReport?: any;
   traceLogs: any[];
+  sources?: string[];
+  llmUsage?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +34,8 @@ const AnalysisSessionSchema: Schema = new Schema({
   validationResult: { type: Schema.Types.Mixed },
   finalReport: { type: Schema.Types.Mixed },
   traceLogs: [{ type: Schema.Types.Mixed }],
+  sources: [{ type: String }],
+  llmUsage: { type: Schema.Types.Mixed },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

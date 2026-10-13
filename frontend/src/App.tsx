@@ -28,9 +28,6 @@ export const App: React.FC = () => {
       ]);
       setDatasets(fetchedDatasets);
       setSessions(fetchedSessions);
-      if (fetchedDatasets.length > 0 && !activeDataset) {
-        setActiveDataset(fetchedDatasets[0]);
-      }
     } catch (err: any) {
       setBackendError("Could not connect to backend gateway. Ensure server processes are active.");
     } finally {

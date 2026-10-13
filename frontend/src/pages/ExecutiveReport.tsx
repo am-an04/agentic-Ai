@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   CheckCircle2, 
@@ -8,7 +8,11 @@ import {
   TrendingUp, 
   Database,
   ArrowLeft,
-  Trash2
+  Trash2,
+  BookOpen,
+  Layers,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { AnalysisSession, AnalysisReport } from '../types';
 import { PlotlyChart } from '../components/PlotlyChart';
@@ -20,6 +24,8 @@ interface ExecutiveReportProps {
 }
 
 export const ExecutiveReport: React.FC<ExecutiveReportProps> = ({ session, onBack, onDeleteSession }) => {
+  const [showObservations, setShowObservations] = useState(false);
+
   if (!session || !session.finalReport) {
     return (
       <div className="glass-panel p-12 rounded-xl text-center max-w-3xl mx-auto space-y-4 animate-fadeIn border border-neutral-800">
@@ -46,6 +52,27 @@ export const ExecutiveReport: React.FC<ExecutiveReportProps> = ({ session, onBac
   const handlePrint = () => {
     window.print();
   };
+
+  const renderFindingWithCitations = (text: string) => {
+    const parts = text.split(/(\[obs-\d+\])/g);
+    return parts.map((part, i) => {
+      const match = part.match(/\[obs-(\d+)\]/);
+      if (match) {
+        return (
+          <span
+            key={i}
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-neutral-800 text-neutral-200 border border-neutral-700 mx-1 align-baseline hover:bg-neutral-700 transition-colors cursor-pointer"
+            title={`Direct evidence citation: Observation ${match[1]}`}
+          >
+            obs-{match[1]}
+          </span>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  const allSources = Array.from(new Set([...(report.sources || []), ...(session.sources || [])]));
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-5xl mx-auto pb-12">
@@ -126,7 +153,7 @@ export const ExecutiveReport: React.FC<ExecutiveReportProps> = ({ session, onBac
         </p>
       </div>
 
-      {/* Key Empirically Validated Findings */}
+      {/* Key Empirically Validated Findings with Citation Badges */}
       <div className="glass-panel p-6 sm:p-8 rounded-xl border border-neutral-800 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-white font-bold text-base">
@@ -134,21 +161,52 @@ export const ExecutiveReport: React.FC<ExecutiveReportProps> = ({ session, onBac
             <span>Validated Findings & Empirical Evidence</span>
           </div>
           <span className="text-xs font-mono text-neutral-300 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-700">
-            Cross-Validated Data
+            Observation Grounded
           </span>
         </div>
 
         <div className="grid grid-cols-1 gap-3">
           {report.key_findings?.map((finding, idx) => (
             <div key={idx} className="p-4 rounded-lg bg-black border border-neutral-800 flex items-start space-x-3">
-              <div className="w-6 h-6 rounded bg-neutral-800 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 border border-neutral-700">
+              <div className="w-6 h-6 rounded bg-neutral-800 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 border border-neutral-700 font-mono">
                 {idx + 1}
               </div>
-              <p className="text-sm text-neutral-200 leading-relaxed font-sans">{finding}</p>
+              <p className="text-sm text-neutral-200 leading-relaxed font-sans">
+                {renderFindingWithCitations(finding)}
+              </p>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Retrieved Domain Knowledge & Guidance (RAG) */}
+      {allSources.length > 0 && (
+        <div className="glass-panel p-6 sm:p-8 rounded-xl border border-neutral-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-white font-bold text-base">
+              <BookOpen className="w-5 h-5 text-white" />
+              <span>Retrieved Domain Guidelines & Knowledge Sources (RAG)</span>
+            </div>
+            <span className="text-xs font-mono text-neutral-400 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
+              Vector Grounded
+            </span>
+          </div>
+          <p className="text-xs text-neutral-400">
+            The multi-agent system retrieved and adhered to the following specialized analytical guidance rulebooks:
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {allSources.map((src, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200 font-mono"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-neutral-400" />
+                <span>{src}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Visual Insights & Charts */}
       {report.visual_insights && report.visual_insights.length > 0 && (
@@ -217,6 +275,51 @@ export const ExecutiveReport: React.FC<ExecutiveReportProps> = ({ session, onBac
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Empirical Tool Observations Collapsible Explorer */}
+      {session.observations && session.observations.length > 0 && (
+        <div className="glass-panel p-6 sm:p-8 rounded-xl border border-neutral-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-white font-bold text-base">
+              <Layers className="w-5 h-5 text-white" />
+              <span>Empirical Observations & Tool Telemetry ({session.observations.length})</span>
+            </div>
+            <button
+              onClick={() => setShowObservations(!showObservations)}
+              className="text-xs font-mono text-neutral-300 hover:text-white bg-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-700 flex items-center space-x-1.5 transition-colors"
+            >
+              <span>{showObservations ? "Hide Evidence Details" : "Inspect Raw Evidence"}</span>
+              {showObservations ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {showObservations && (
+            <div className="space-y-3 pt-2">
+              {session.observations.map((obs: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-lg bg-black border border-neutral-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2 py-0.5 rounded bg-neutral-800 text-white font-mono font-bold text-[10px] border border-neutral-700">
+                        obs-{idx + 1}
+                      </span>
+                      <span className="font-bold text-neutral-200 font-mono">{obs.tool_name}</span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${obs.success ? "bg-neutral-900 text-neutral-300 border border-neutral-800" : "bg-neutral-900 text-red-400 border border-neutral-800"}`}>
+                      {obs.success ? "Success" : "Failed"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-300 font-sans">{obs.summary}</p>
+                  {obs.output_data && (
+                    <pre className="p-2.5 rounded bg-neutral-950 border border-neutral-850 font-mono text-[11px] text-neutral-400 overflow-x-auto max-h-48">
+                      {typeof obs.output_data === 'object' ? JSON.stringify(obs.output_data, null, 2) : String(obs.output_data)}
+                    </pre>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -34,6 +34,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onDeleteDataset,
   onNavigateToUpload
 }) => {
+  const completedSessions = sessions.filter(s => s.status === 'completed');
+  const validSessions = completedSessions.filter(s => s.validationResult?.overall_valid !== false);
+  const validationRateText = completedSessions.length > 0 
+    ? `${Math.round((validSessions.length / completedSessions.length) * 100)}%` 
+    : '—';
+
+  const avgDataQualityText = datasets.length > 0
+    ? (datasets.reduce((acc, d) => acc + (d.qualityScore || 0), 0) / datasets.length).toFixed(1)
+    : null;
+
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Hero Banner - Monochrome */}
@@ -92,8 +102,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-xs uppercase font-semibold tracking-wider">Validation Rate</span>
             <ShieldCheck className="w-4 h-4 text-white" />
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-white">100%</div>
-          <p className="text-xs text-neutral-500 mt-1">Empirically grounded</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-white">{validationRateText}</div>
+          <p className="text-xs text-neutral-500 mt-1">
+            {completedSessions.length > 0 ? `${validSessions.length} of ${completedSessions.length} grounded` : "No completed sessions"}
+          </p>
         </div>
 
         <div className="glass-panel p-5 rounded-xl border border-neutral-800">
@@ -101,8 +113,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-xs uppercase font-semibold tracking-wider">Avg Data Quality</span>
             <BarChart3 className="w-4 h-4 text-white" />
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-white">96.4<span className="text-sm font-normal text-neutral-500">/100</span></div>
-          <p className="text-xs text-neutral-500 mt-1">Profiled accuracy</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-white">
+            {avgDataQualityText !== null ? (
+              <>
+                {avgDataQualityText}<span className="text-sm font-normal text-neutral-500">/100</span>
+              </>
+            ) : (
+              "—"
+            )}
+          </div>
+          <p className="text-xs text-neutral-500 mt-1">
+            {datasets.length > 0 ? "Profiled accuracy" : "No datasets uploaded"}
+          </p>
         </div>
       </div>
 

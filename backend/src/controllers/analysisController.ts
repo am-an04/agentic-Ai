@@ -38,9 +38,12 @@ export const startAnalysis = async (req: Request, res: Response) => {
       session.status = data.completed ? 'completed' : (data.requires_human_approval ? 'approval_required' : 'running');
       session.approvalPrompt = data.approval_prompt;
       session.plan = data.plan;
+      session.observations = data.observations || [];
+      session.charts = data.charts || [];
       session.validationResult = data.validation_result;
       session.finalReport = data.final_report;
       session.traceLogs = data.trace_logs || [];
+      session.sources = data.sources || [];
       session.updatedAt = new Date();
 
       await session.save();
@@ -78,8 +81,12 @@ export const approveAction = async (req: Request, res: Response) => {
     const data = aiResponse.data;
     session.isApproved = Boolean(approved);
     session.status = data.completed ? 'completed' : 'running';
+    session.observations = data.observations || session.observations;
+    session.charts = data.charts || session.charts;
+    session.validationResult = data.validation_result || session.validationResult;
     session.finalReport = data.final_report;
     session.traceLogs = data.trace_logs || session.traceLogs;
+    session.sources = data.sources || session.sources;
     session.updatedAt = new Date();
 
     await session.save();

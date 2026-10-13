@@ -61,3 +61,12 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Local Databases & Chroma Vector Store
+data/
+**/data/
+chroma_db/
+**/chroma_db/
+.pytest_cache/
+**/.pytest_cache/
+!.env.example

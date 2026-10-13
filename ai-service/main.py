@@ -97,7 +97,8 @@ def start_analysis(request: AnalyzeRequest):
         "charts_count": len(final_state.get("charts", [])),
         "validation_result": final_state.get("validation_result"),
         "final_report": final_state.get("final_report"),
-        "trace_logs": final_state.get("trace_logs")
+        "trace_logs": final_state.get("trace_logs"),
+        "sources": final_state.get("sources", [])
     })
 
 @app.post("/api/approve")
@@ -124,7 +125,8 @@ def approve_action(request: ApprovalRequest):
             "session_id": session_id,
             "completed": updated_state["completed"],
             "final_report": updated_state.get("final_report"),
-            "trace_logs": updated_state.get("trace_logs")
+            "trace_logs": updated_state.get("trace_logs"),
+            "sources": updated_state.get("sources", [])
         })
     else:
         state["requires_human_approval"] = False
@@ -140,7 +142,8 @@ def approve_action(request: ApprovalRequest):
             observations=state["observations"],
             charts=state["charts"],
             validation_result=state.get("validation_result", {}),
-            trace_logs=state["trace_logs"]
+            trace_logs=state["trace_logs"],
+            sources=state.get("sources", [])
         )
         state["final_report"] = r_res
         state["completed"] = True
@@ -149,8 +152,22 @@ def approve_action(request: ApprovalRequest):
             "session_id": session_id,
             "completed": True,
             "final_report": r_res,
-            "trace_logs": state.get("trace_logs")
+            "trace_logs": state.get("trace_logs"),
+            "sources": state.get("sources", [])
         })
+
+from app.core.knowledge import get_knowledge_store
+
+@app.post("/api/dataset/{dataset_id}/dictionary")
+def set_dataset_dictionary(dataset_id: str, request: dict):
+    definitions = request.get("definitions", {})
+    get_knowledge_store().set_data_dictionary(dataset_id, definitions)
+    return {"message": "Data dictionary saved.", "dataset_id": dataset_id, "definitions": definitions}
+
+@app.get("/api/dataset/{dataset_id}/dictionary")
+def get_dataset_dictionary(dataset_id: str):
+    defs = get_knowledge_store().get_data_dictionary(dataset_id)
+    return {"dataset_id": dataset_id, "definitions": defs}
 
 @app.post("/api/sandbox")
 def sandbox_endpoint(request: dict):

@@ -1,6 +1,6 @@
 from typing import TypedDict, List, Dict, Any, Optional
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     dataset_path: str
     user_question: str
     session_id: str
@@ -17,3 +17,8 @@ class AgentState(TypedDict):
     trace_logs: List[Dict[str, Any]]
     errors: List[str]
     completed: bool
+    enable_ml: Optional[bool]
+    retrieved_guidance: Optional[str]
+    step_budget: Optional[int]
+    reflection_notes: Optional[List[Dict[str, Any]]]
+    sources: Optional[List[str]]

@@ -90,15 +90,22 @@ def trend_analysis(file_path: str, date_col: str, value_col: str, freq: str = "Q
     df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
     valid_df = df.dropna(subset=[date_col]).sort_values(by=date_col)
     
-    if valid_df.empty:
-        return {"error": f"No valid date entries found in '{date_col}'."}
+    # Map frequency alias for Pandas 2.2+ / 3.0+ ('Q' -> 'QE', 'M' -> 'ME')
+    offset_freq = freq
+    if str(freq).upper() == "Q":
+        offset_freq = "QE"
+    elif str(freq).upper() == "M":
+        offset_freq = "ME"
         
-    resampled = valid_df.set_index(date_col).resample(freq)[value_col].agg(["sum", "mean", "count"]).reset_index()
+    try:
+        resampled = valid_df.set_index(date_col).resample(offset_freq)[value_col].agg(["sum", "mean", "count"]).reset_index()
+    except Exception:
+        resampled = valid_df.set_index(date_col).resample(freq)[value_col].agg(["sum", "mean", "count"]).reset_index()
     
     # Format date string labels (e.g. '2025-Q1', '2025-Q2', '2025-Q3')
-    if freq == "Q":
+    if str(freq).upper() in ["Q", "QE"]:
         resampled["period_label"] = resampled[date_col].dt.to_period("Q").astype(str)
-    elif freq == "M":
+    elif str(freq).upper() in ["M", "ME"]:
         resampled["period_label"] = resampled[date_col].dt.to_period("M").astype(str)
     else:
         resampled["period_label"] = resampled[date_col].astype(str)
